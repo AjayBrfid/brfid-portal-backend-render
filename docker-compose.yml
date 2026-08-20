@@ -1,0 +1,66 @@
+services:
+  # Postgres now runs natively on the host (Windows PostgreSQL 18 service, port 5433) instead
+  # of in a container — see README.md's "Database" section. The service below is kept,
+  # commented out, in case you ever want to switch back to a Dockerized Postgres instead: just
+  # uncomment it, set DATABASE_HOST=db in .env, and add `depends_on: db: condition:
+  # service_healthy` back to the api service.
+  #
+  # db:
+  #   image: postgres:16-alpine
+  #   container_name: brfid_platform_db
+  #   environment:
+  #     POSTGRES_DB: ${DATABASE_NAME:-brfid_platform}
+  #     POSTGRES_USER: ${DATABASE_USER:-brfid_user}
+  #     POSTGRES_PASSWORD: ${DATABASE_PASSWORD:-brfid_password}
+  #   ports:
+  #     - "${DATABASE_PORT:-5432}:5432"
+  #   volumes:
+  #     - brfid_platform_pgdata:/var/lib/postgresql/data
+  #   healthcheck:
+  #     test: ["CMD-SHELL", "pg_isready -U ${DATABASE_USER:-brfid_user}"]
+  #     interval: 5s
+  #     timeout: 5s
+  #     retries: 10
+
+  seaweedfs:
+    image: chrislusf/seaweedfs
+    container_name: brfid_platform_seaweedfs
+    # -s3 turns on SeaweedFS's embedded S3-compatible gateway (bucket/object semantics boto3
+    # actually speaks) on top of the same filer storage — the plain filer HTTP API the command
+    # ran without this flag does NOT understand S3 requests, which is why the backend's
+    # S3StorageClient (boto3) could never actually reach it.
+    command: server -dir=/data -master.port=9333 -volume.port=8080 -filer=true -filer.port=8888 -s3=true -s3.port=8333 -ip.bind=0.0.0.0
+    ports:
+      # Host-side ports only — remapped to avoid clashing with another SeaweedFS instance
+      # already running on this dev machine (a different, unrelated project's own compose
+      # stack). Container-internal ports (and the api service's SEAWEEDFS_FILER_URL, which
+      # talks to this container over the Docker network, not the host mapping) are unaffected.
+      - "9334:9333"
+      - "8081:8080"
+      - "8889:8888"
+      - "8890:8333"
+    volumes:
+      - brfid_platform_seaweedfs_data:/data
+
+  api:
+    build: .
+    container_name: brfid_platform_api
+    env_file: .env
+    environment:
+      # host.docker.internal lets this container reach the native Postgres running on the
+      # Windows host itself (Docker Desktop's special DNS name for the host machine).
+      DATABASE_HOST: host.docker.internal
+      DATABASE_PORT: "5433"
+      SEAWEEDFS_FILER_URL: http://seaweedfs:8888
+    ports:
+      - "8000:8000"
+    depends_on:
+      seaweedfs:
+        condition: service_started
+    command: sh -c "alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port 8000"
+    volumes:
+      - ./app:/app/app
+      - ./alembic:/app/alembic
+
+volumes:
+  brfid_platform_seaweedfs_data:

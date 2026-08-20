@@ -1,0 +1,15 @@
+fastapi==0.135.2
+uvicorn[standard]==0.42.0
+pydantic==2.12.5
+pydantic-settings==2.7.0
+email-validator==2.2.0
+python-dotenv==1.0.1
+SQLAlchemy==2.0.48
+psycopg2-binary==2.9.11
+alembic==1.18.4
+bcrypt==5.0.0
+PyJWT==2.10.1
+python-multipart==0.0.20
+boto3==1.35.99
+openpyxl==3.1.5
+Pillow==12.3.0
