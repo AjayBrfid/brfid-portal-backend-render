@@ -19,7 +19,7 @@ class RetailRepository:
         return self.session.execute(select(Store).where(Store.code == code)).scalar_one_or_none()
 
     def next_code(self) -> str:
-        return next_sequential_code(self.session, Store.code, "STR")
+        return next_sequential_code(self.session, Store.code, "STR-")
 
     def add(self, store: Store) -> Store:
         self.session.add(store)

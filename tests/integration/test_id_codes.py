@@ -1,7 +1,11 @@
-"""Every entity's human-readable display code is now `{PREFIX}{3-digit number}`, no dash
-(RFQ001, PR001, QT001, ...) via app/utils/codes.py::next_sequential_code — and three entities
-that never had a working code generator at all (Quotation, VendorCatalogSubmission, VendorGood)
-now get one, wired into their create/submit paths.
+"""Every entity's human-readable display code is `{PREFIX}{3-digit number}` via
+app/utils/codes.py::next_sequential_code — no dash for most entities (RFQ001, PR001, QT001, ...),
+but Vendor/Warehouse/Store codes are dashed (VEN-001, WH-001, STR-001): registration used to
+generate both formats depending on the entry point, and the dashed form was the one already
+used consistently in seed data and everywhere codes are shown to users, so that's the format
+`next_code()` was unified onto. Three entities that never had a working code generator at all
+(Quotation, VendorCatalogSubmission, VendorGood) now get one, wired into their create/submit
+paths.
 """
 import re
 
@@ -23,10 +27,10 @@ from tests.integration.helpers import (
 )
 
 
-def test_next_code_generators_use_no_dash_three_digit_format(db_session):
-    assert re.fullmatch(r"WH\d{3}", WarehouseRepository(db_session).next_code())
-    assert re.fullmatch(r"VEN\d{3}", VendorRepository(db_session).next_code())
-    assert re.fullmatch(r"STR\d{3}", RetailRepository(db_session).next_code())
+def test_next_code_generators_use_expected_format(db_session):
+    assert re.fullmatch(r"WH-\d{3}", WarehouseRepository(db_session).next_code())
+    assert re.fullmatch(r"VEN-\d{3}", VendorRepository(db_session).next_code())
+    assert re.fullmatch(r"STR-\d{3}", RetailRepository(db_session).next_code())
     assert re.fullmatch(r"GD\d{3}", VendorRepository(db_session).next_good_code())
     assert re.fullmatch(r"CAT\d{3}", VendorRepository(db_session).next_catalog_code())
 

@@ -9,8 +9,6 @@ class CreateTicketRequest(BaseModel):
     subject: str = Field(min_length=1, max_length=255)
     description: str = Field(min_length=1)
     priority: str = "medium"
-    related_module_type: str | None = None
-    related_module_id: uuid.UUID | None = None
 
 
 class UpdateTicketRequest(BaseModel):
@@ -27,7 +25,6 @@ class AddMessageRequest(BaseModel):
 class RoutingRuleRequest(BaseModel):
     category: str
     default_assignee_user_id: uuid.UUID | None = None
-    default_team: str | None = None
 
 
 class TicketOut(BaseModel):
@@ -43,8 +40,6 @@ class TicketOut(BaseModel):
     description: str
     priority: str
     status: str
-    related_module_type: str | None
-    related_module_id: uuid.UUID | None
     assigned_to_user_id: uuid.UUID | None
     sla_due_at: datetime
     resolved_at: datetime | None
@@ -91,4 +86,3 @@ class RoutingRuleOut(BaseModel):
     id: uuid.UUID
     category: str
     default_assignee_user_id: uuid.UUID | None
-    default_team: str | None

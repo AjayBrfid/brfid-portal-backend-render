@@ -91,7 +91,7 @@ def build_vendor_report_sections(session: Session, vendor_id: uuid.UUID, start: 
     ).all()
     returns_rows = [
         [
-            ret.ref_code, po.ref_code, variant.variant_code if variant else "-",
+            po.ref_code, variant.variant_code if variant else "-",
             ret.qty, float(ret.refund_amount) if ret.refund_amount is not None else 0.0,
             ret.status.value, ret.created_at.strftime("%d %b %Y"),
             warehouse.name if warehouse else "-", warehouse.contact_phone if warehouse else "-",
@@ -103,20 +103,20 @@ def build_vendor_report_sections(session: Session, vendor_id: uuid.UUID, start: 
         {
             "title": "Goods Sent", "rows": goods_sent_rows,
             "columns": [
-                "ASN Ref", "SKU Code", "SKU Name", "Colour", "Size", "Ordered Qty", "Shipped Qty", "Dispatch Date",
+                "ASN Ref", "SKU Code", "Product Name", "Colour", "Size", "Ordered Qty", "Shipped Qty", "Dispatch Date",
                 "Warehouse Name", "Warehouse Contact",
             ],
         },
         {
-            "title": "Stock Awaiting Receipt", "rows": stock_awaiting_rows,
-            "columns": ["Item Code", "Item Name", "Category", "Quantity", "Stock Status", "Assigned SKU", "Price/Unit"],
+            "title": "My Goods Inventory", "rows": stock_awaiting_rows,
+            "columns": ["Goods Code", "Product Name", "Category", "Quantity", "Stock Status", "Assigned SKU", "Price/Unit"],
         },
         {
             "title": "Payment Status", "rows": payment_status_rows,
             "columns": ["Invoice No", "PO Ref", "Invoice Date", "Due Date", "Amount", "Invoice Status", "Payment Status", "Paid Date"],
         },
         {
-            "title": "Returns", "rows": returns_rows,
-            "columns": ["Return Ref", "PO Ref", "SKU Code", "Qty", "Refund Amount", "Status", "Created Date", "Warehouse Name", "Warehouse Contact"],
+            "title": "Returns from Warehouse", "rows": returns_rows,
+            "columns": ["PO Ref", "SKU Code", "Qty", "Refund Amount", "Status", "Created Date", "Warehouse Name", "Warehouse Contact"],
         },
     ]

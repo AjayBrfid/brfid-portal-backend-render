@@ -116,15 +116,17 @@ def _details_card(ws, row: int, portal_label: str, details: dict[str, str]) -> i
         if left[0] is not None:
             lk = ws.cell(row=row, column=1, value=left[0])
             lk.font = Font(bold=True, size=9.5, color=_GRAY_TEXT)
+            lk.alignment = Alignment(vertical="center", indent=1)
             lv = ws.cell(row=row, column=2, value=left[1] if left[1] not in (None, "") else "-")
             lv.font = Font(size=10, color=_NAVY_TEXT)
-            lv.alignment = Alignment(vertical="center", wrap_text=is_address_row)
+            lv.alignment = Alignment(vertical="center", wrap_text=is_address_row, indent=1)
         if right[0] is not None:
             rk = ws.cell(row=row, column=3, value=right[0])
             rk.font = Font(bold=True, size=9.5, color=_GRAY_TEXT)
+            rk.alignment = Alignment(vertical="center", indent=1)
             rv = ws.cell(row=row, column=4, value=right[1] if right[1] not in (None, "") else "-")
             rv.font = Font(size=10, color=_NAVY_TEXT)
-            rv.alignment = Alignment(vertical="center", wrap_text=is_address_row)
+            rv.alignment = Alignment(vertical="center", wrap_text=is_address_row, indent=1)
         ws.row_dimensions[row].height = 34 if is_address_row else 18
         row += 1
 
@@ -155,8 +157,10 @@ def _build_activity_sheet(wb, portal_label: str, period_label: str, rows: list[A
 
     title_cell = ws.cell(row=1, column=1, value=f"{portal_label.upper()} ACTIVITY HISTORY")
     title_cell.font = Font(bold=True, size=14, color=_NAVY_TEXT)
+    title_cell.alignment = Alignment(horizontal="center")
     sub_cell = ws.cell(row=2, column=1, value=f"{period_label}  |  {len(rows)} activit{'y' if len(rows) == 1 else 'ies'}")
     sub_cell.font = Font(italic=True, size=10, color=_MUTED_TEXT)
+    sub_cell.alignment = Alignment(horizontal="center")
     ws.merge_cells(start_row=1, start_column=1, end_row=1, end_column=_TABLE_COL_COUNT)
     ws.merge_cells(start_row=2, start_column=1, end_row=2, end_column=_TABLE_COL_COUNT)
 
@@ -228,11 +232,11 @@ def build_activity_report_workbook(
     for col, width in _COL_WIDTHS.items():
         ws.column_dimensions[col].width = width
 
-    # ---- header band: big title left, logo right ----
+    # ---- header band: big title centered, logo right ----
     ws.merge_cells("A1:B2")
     title_cell = ws.cell(row=1, column=1, value=f"{portal_label.upper()} ACTIVITY REPORT")
     title_cell.font = Font(bold=True, size=18, color=_NAVY_TEXT)
-    title_cell.alignment = Alignment(horizontal="left", vertical="center")
+    title_cell.alignment = Alignment(horizontal="center", vertical="center")
 
     if _LOGO_PATH.exists():
         img = XLImage(str(_LOGO_PATH))
@@ -305,22 +309,27 @@ _REPORT_ROW_ALT_FILL = PatternFill(start_color="F7F9FC", end_color="F7F9FC", fil
 _REPORT_TILE_FILL = PatternFill(start_color="F2F5FA", end_color="F2F5FA", fill_type="solid")
 _REPORT_CARD_FILL = PatternFill(start_color="FAFBFC", end_color="FAFBFC", fill_type="solid")
 _REPORT_ACCENT_BORDER = Side(style="thin", color="D6DCE5")
+_REPORT_CONTENTS_BORDER = Border(
+    left=_REPORT_ACCENT_BORDER, right=_REPORT_ACCENT_BORDER, top=_REPORT_ACCENT_BORDER, bottom=_REPORT_ACCENT_BORDER,
+)
 
 
 def _report_header_block(
-    ws, portal_label: str, title_suffix: str, *, show_logo: bool = True, subtitle: str = "Britannia RFID Platform"
+    ws, portal_label: str, title_suffix: str, *,
+    show_logo: bool = True, subtitle: str = "Britannia RFID Platform", center_align: bool = False,
 ) -> int:
-    """Title + subtitle left, small logo right (when show_logo) -- no rule beneath -- returns the
-    next free row."""
+    """Title + subtitle centered, small logo right (when show_logo) -- no rule beneath -- returns
+    the next free row. The title/subtitle are always centered regardless of center_align, which
+    only governs the report body (meta strip, details, contents, data tables) below."""
     ws.merge_cells("A1:D1")
     title_cell = ws.cell(row=1, column=1, value=f"{portal_label.upper()} {title_suffix}".strip())
     title_cell.font = Font(bold=True, size=18, color=_NAVY_TEXT)
-    title_cell.alignment = Alignment(horizontal="left", vertical="bottom")
+    title_cell.alignment = Alignment(horizontal="center", vertical="bottom")
 
     ws.merge_cells("A2:D2")
     subtitle_cell = ws.cell(row=2, column=1, value=subtitle)
     subtitle_cell.font = Font(size=10, italic=True, color=_MUTED_TEXT)
-    subtitle_cell.alignment = Alignment(horizontal="left", vertical="top")
+    subtitle_cell.alignment = Alignment(horizontal="center", vertical="top")
 
     if show_logo:
         if _BUSINESS_LOGO_PATH.exists():
@@ -336,9 +345,10 @@ def _report_header_block(
     return 6
 
 
-def _report_meta_strip(ws, row: int, meta: list[tuple[str, str]]) -> int:
+def _report_meta_strip(ws, row: int, meta: list[tuple[str, str]], *, center_align: bool = False) -> int:
     """Two light tinted tiles side by side (label above, value below) -- a compact, modern
     stand-in for the old colored icon cards, with no icons/colors of its own."""
+    h_align = "center" if center_align else "left"
     label_row, value_row = row, row + 1
     ws.row_dimensions[label_row].height = 15
     ws.row_dimensions[value_row].height = 22
@@ -348,8 +358,10 @@ def _report_meta_strip(ws, row: int, meta: list[tuple[str, str]]) -> int:
         ws.merge_cells(start_row=value_row, start_column=start_col, end_row=value_row, end_column=end_col)
         label_cell = ws.cell(row=label_row, column=start_col, value=label.upper())
         label_cell.font = Font(bold=True, size=8.5, color=_MUTED_TEXT)
+        label_cell.alignment = Alignment(horizontal=h_align)
         value_cell = ws.cell(row=value_row, column=start_col, value=value)
         value_cell.font = Font(bold=True, size=12, color=_NAVY_TEXT)
+        value_cell.alignment = Alignment(horizontal=h_align)
         for r in (label_row, value_row):
             for c in range(start_col, end_col + 1):
                 ws.cell(row=r, column=c).fill = _REPORT_TILE_FILL
@@ -357,22 +369,27 @@ def _report_meta_strip(ws, row: int, meta: list[tuple[str, str]]) -> int:
     return value_row + 2
 
 
-def _report_details_block(ws, row: int, heading: str, details: dict[str, str]) -> int:
+def _report_details_block(ws, row: int, heading: str, details: dict[str, str], *, center_align: bool = False) -> int:
     """One key/value pair per row (label in column A, value spanning B-D) inside a
     soft-bordered box -- Vendor Code, Name, GST, Address, City, State etc. listed one by one
     rather than packed into side-by-side pairs."""
+    h_align = "center" if center_align else "left"
     heading_cell = ws.cell(row=row, column=1, value=heading.upper())
     heading_cell.font = Font(bold=True, size=11, color=_NAVY_TEXT)
+    heading_cell.alignment = Alignment(horizontal=h_align)
     row += 1
     card_start = row
 
     for key, value in details.items():
+        is_address_row = key.lower() == "address"
         key_cell = ws.cell(row=row, column=1, value=key)
         key_cell.font = Font(bold=True, size=9.5, color=_GRAY_TEXT)
+        key_cell.alignment = Alignment(horizontal=h_align, vertical="center", indent=1)
         ws.merge_cells(start_row=row, start_column=2, end_row=row, end_column=4)
         val_cell = ws.cell(row=row, column=2, value=value if value not in (None, "") else "-")
         val_cell.font = Font(size=10, color=_NAVY_TEXT)
-        ws.row_dimensions[row].height = 17
+        val_cell.alignment = Alignment(horizontal=h_align, wrap_text=is_address_row, vertical="center", indent=1)
+        ws.row_dimensions[row].height = 38 if is_address_row else 17
         row += 1
 
     card_end = row - 1
@@ -383,11 +400,13 @@ def _report_details_block(ws, row: int, heading: str, details: dict[str, str]) -
     return card_end + 2
 
 
-def _report_contents_block(ws, row: int, sections: list[dict]) -> int:
+def _report_contents_block(ws, row: int, sections: list[dict], *, center_align: bool = False) -> int:
     """A small bordered table (matching the data sheets' own header style) listing each section
     and its record count, rather than a plain text list."""
+    h_align = "center" if center_align else "left"
     heading_cell = ws.cell(row=row, column=1, value="REPORT CONTENTS")
     heading_cell.font = Font(bold=True, size=11, color=_NAVY_TEXT)
+    heading_cell.alignment = Alignment(horizontal=h_align)
     row += 1
 
     header_row = row
@@ -397,9 +416,9 @@ def _report_contents_block(ws, row: int, sections: list[dict]) -> int:
         cell = ws.cell(row=header_row, column=col, value=label)
         cell.font = _REPORT_HEADER_FONT
         cell.fill = _REPORT_HEADER_FILL
-        cell.alignment = Alignment(horizontal="left" if col == 1 else "right", vertical="center")
+        cell.alignment = Alignment(horizontal="center" if center_align else ("left" if col == 1 else "right"), vertical="center")
     for c in range(1, 5):
-        ws.cell(row=header_row, column=c).border = Border(top=_REPORT_ACCENT_BORDER, bottom=_REPORT_ACCENT_BORDER)
+        ws.cell(row=header_row, column=c).border = _REPORT_CONTENTS_BORDER
     ws.row_dimensions[header_row].height = 19
     row += 1
 
@@ -409,14 +428,14 @@ def _report_contents_block(ws, row: int, sections: list[dict]) -> int:
         count = len(section["rows"])
         name_cell = ws.cell(row=row, column=1, value=section["title"])
         name_cell.font = Font(size=10, color=_NAVY_TEXT)
-        name_cell.alignment = Alignment(horizontal="left")
+        name_cell.alignment = Alignment(horizontal=h_align)
         count_cell = ws.cell(row=row, column=4, value=count)
         count_cell.font = Font(size=10, color=_GRAY_TEXT)
-        count_cell.alignment = Alignment(horizontal="right")
+        count_cell.alignment = Alignment(horizontal="center" if center_align else "right")
         fill = _REPORT_ROW_ALT_FILL if i % 2 == 1 else None
         for c in range(1, 5):
             cell = ws.cell(row=row, column=c)
-            cell.border = Border(bottom=_REPORT_ACCENT_BORDER)
+            cell.border = _REPORT_CONTENTS_BORDER
             if fill:
                 cell.fill = fill
         row += 1
@@ -501,21 +520,23 @@ def build_business_report_workbook(
     ws = wb.active
     ws.title = "Summary"
     ws.sheet_view.showGridLines = False
-    ws.column_dimensions["A"].width = 18
+    ws.column_dimensions["A"].width = 24
     ws.column_dimensions["B"].width = 28
-    ws.column_dimensions["C"].width = 18
+    ws.column_dimensions["C"].width = 20
     ws.column_dimensions["D"].width = 28
 
-    row_cursor = _report_header_block(ws, portal_label, "BUSINESS REPORT", show_logo=show_logo, subtitle=subtitle)
+    row_cursor = _report_header_block(
+        ws, portal_label, "BUSINESS REPORT", show_logo=show_logo, subtitle=subtitle, center_align=center_align,
+    )
     row_cursor = _report_meta_strip(ws, row_cursor, [
         ("Report Period", period_label),
         ("Generated On", datetime.now().strftime("%d %b %Y, %H:%M")),
-    ])
+    ], center_align=center_align)
 
     if entity_details:
-        row_cursor = _report_details_block(ws, row_cursor, f"{portal_label} Details", entity_details)
+        row_cursor = _report_details_block(ws, row_cursor, f"{portal_label} Details", entity_details, center_align=center_align)
 
-    _report_contents_block(ws, row_cursor, sections)
+    _report_contents_block(ws, row_cursor, sections, center_align=center_align)
 
     ws.page_setup.orientation = "portrait"
     ws.page_setup.fitToWidth = 1

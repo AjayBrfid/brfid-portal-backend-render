@@ -19,7 +19,7 @@ class WarehouseRepository:
         return self.session.execute(select(Warehouse).where(Warehouse.code == code)).scalar_one_or_none()
 
     def next_code(self) -> str:
-        return next_sequential_code(self.session, Warehouse.code, "WH")
+        return next_sequential_code(self.session, Warehouse.code, "WH-")
 
     def add(self, warehouse: Warehouse) -> Warehouse:
         self.session.add(warehouse)

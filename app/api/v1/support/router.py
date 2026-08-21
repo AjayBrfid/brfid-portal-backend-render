@@ -40,10 +40,7 @@ def create_ticket(
     body: CreateTicketRequest, session: Session = Depends(get_db), user: User = Depends(get_current_user),
 ):
     service = SupportService(session)
-    ticket = service.create_ticket(
-        user, body.category, body.subject, body.description, body.priority,
-        body.related_module_type, body.related_module_id,
-    )
+    ticket = service.create_ticket(user, body.category, body.subject, body.description, body.priority)
     return ApiResponse(data=TicketOut.model_validate(ticket))
 
 
@@ -149,5 +146,5 @@ def list_routing_rules(session: Session = Depends(get_db), _: User = Depends(_st
 @router.post("/routing-rules", response_model=ApiResponse[RoutingRuleOut])
 def upsert_routing_rule(body: RoutingRuleRequest, session: Session = Depends(get_db), _: User = Depends(_staff)):
     service = SupportService(session)
-    rule = service.upsert_routing_rule(body.category, body.default_assignee_user_id, body.default_team)
+    rule = service.upsert_routing_rule(body.category, body.default_assignee_user_id)
     return ApiResponse(data=RoutingRuleOut.model_validate(rule))

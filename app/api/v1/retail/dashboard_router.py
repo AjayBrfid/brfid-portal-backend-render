@@ -45,7 +45,9 @@ def export_report(
         "Store Code": store.code, "Name": store.name, "Address": store.address, "City": store.city,
         "State": store.state, "GSTIN": store.gstin, "Phone": store.contact_phone,
     }
-    buffer = build_business_report_workbook("Retail", details, period_label, sections)
+    buffer = build_business_report_workbook(
+        "Retail", details, period_label, sections, show_logo=False, center_align=False,
+    )
     filename = f"retail_report_{start.isoformat()}_{end.isoformat()}.xlsx"
     return StreamingResponse(
         buffer,

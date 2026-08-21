@@ -35,7 +35,7 @@ class VendorRepository:
         return self.session.execute(select(Vendor).where(Vendor.pan == pan)).scalar_one_or_none()
 
     def next_code(self) -> str:
-        return next_sequential_code(self.session, Vendor.code, "VEN")
+        return next_sequential_code(self.session, Vendor.code, "VEN-")
 
     def next_good_code(self) -> str:
         return next_sequential_code(self.session, VendorGood.code, "GD")

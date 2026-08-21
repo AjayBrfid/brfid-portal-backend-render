@@ -143,9 +143,10 @@ class WarehouseService:
 
     def onboard_vendor(self, name: str, code: str | None, gstin: str, city: str, rating: float | None, lead_time_days: int | None = None):
         from app.models.vendor import Vendor, VendorStatus  # Phase 4
+        from app.repositories.vendor_repository import VendorRepository  # Phase 4
 
         vendor = Vendor(
-            code=code or self._next_vendor_code(),
+            code=code or VendorRepository(self.session).next_code(),
             name=name,
             gst=gstin,
             city=city,
@@ -156,13 +157,6 @@ class WarehouseService:
         self.session.add(vendor)
         self.session.commit()
         return vendor
-
-    def _next_vendor_code(self) -> str:
-        from app.models.vendor import Vendor  # Phase 4
-
-        existing = self.session.scalars(select(Vendor.code).where(Vendor.code.op("~")(r"^VEN-[0-9]+$"))).all()
-        next_num = max((int(c.split("-")[1]) for c in existing), default=0) + 1
-        return f"VEN-{next_num:03d}"
 
     def _get_or_create_vendor_link(self, warehouse_id: uuid.UUID, vendor_id: uuid.UUID) -> WarehouseVendorLink:
         link = self.repo.get_vendor_link(warehouse_id, vendor_id)

@@ -9,12 +9,12 @@ from fastapi import APIRouter
 from app.compat.super_admin.activities_router import router as activities_router
 from app.compat.super_admin.auth_router import router as auth_router
 from app.compat.super_admin.dashboard_router import router as dashboard_router
-from app.compat.super_admin.deliveries_router import inbound_router, outbound_router
 from app.compat.super_admin.notifications_router import router as notifications_router
 from app.compat.super_admin.products_router import router as products_router
 from app.compat.super_admin.purchase_orders_router import router as purchase_orders_router
 from app.compat.super_admin.quotations_router import router as quotations_router
 from app.compat.super_admin.rfqs_router import router as rfqs_router
+from app.compat.super_admin.shipments_router import router as shipments_router
 from app.compat.super_admin.stock_requests_router import router as stock_requests_router
 from app.compat.super_admin.store_inventory_router import router as store_inventory_router
 from app.compat.super_admin.stores_router import router as stores_router
@@ -35,8 +35,7 @@ router.include_router(warehouses_router)
 router.include_router(zone_router)
 router.include_router(stores_router)
 router.include_router(store_inventory_router)
-router.include_router(inbound_router)
-router.include_router(outbound_router)
+router.include_router(shipments_router)
 router.include_router(quotations_router)
 router.include_router(stock_requests_router)
 router.include_router(products_router)

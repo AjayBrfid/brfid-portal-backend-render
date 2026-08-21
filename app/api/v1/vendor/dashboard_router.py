@@ -142,7 +142,7 @@ def export_report(
     }
     buffer = build_business_report_workbook(
         "Vendor", details, period_label, sections,
-        show_logo=False, subtitle="Vendor Management Portal", center_align=True,
+        show_logo=False, subtitle="Vendor Management Portal", center_align=False,
     )
     filename = f"vendor_report_{start.isoformat()}_{end.isoformat()}.xlsx"
     return StreamingResponse(

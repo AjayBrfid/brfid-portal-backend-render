@@ -218,26 +218,19 @@ class WarehouseInventoryOut(CamelModel):
 # --- deliveries ---
 
 
-class InboundDeliveryOut(CamelModel):
-    id: uuid.UUID
-    po_id: str
-    vendor_name: str
-    warehouse_name: str
-    dispatch_date: date
-    expected_delivery: date | None = None
-    status: str
-    delayed: bool
-    tracking_no: str | None = None
-
-
-class OutboundDeliveryOut(CamelModel):
+class ShipmentOut(CamelModel):
+    """Unified Inbound+Outbound shipment row — Inbound reads the Shipment ledger (vendor ->
+    warehouse), Outbound reads the TransferOrder ledger (warehouse -> store); `direction`
+    tells the two apart since neither table alone carries every field the other has."""
     id: str
+    direction: str  # "Inbound" | "Outbound"
+    po_id: str | None = None
     request_id: str | None = None
-    store_name: str
+    vendor_name: str | None = None
+    store_name: str | None = None
     warehouse_name: str
     dispatch_date: date | None = None
-    # TransferOrder has no expected-delivery-date column at all — this compat layer has no
-    # source for it.
+    # TransferOrder has no expected-delivery-date column at all — always None for Outbound rows.
     expected_delivery: date | None = None
     status: str
     delayed: bool

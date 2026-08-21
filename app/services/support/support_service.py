@@ -37,7 +37,6 @@ class SupportService:
 
     def create_ticket(
         self, user: User, category: str, subject: str, description: str, priority: str,
-        related_module_type: str | None, related_module_id: uuid.UUID | None,
     ) -> SupportTicket:
         allowed_categories = CATEGORIES_BY_ROLE.get(user.portal_type.value, [])
         if allowed_categories and category not in allowed_categories:
@@ -61,8 +60,6 @@ class SupportService:
             description=description,
             priority=priority,
             status="open",
-            related_module_type=related_module_type,
-            related_module_id=related_module_id,
             assigned_to_user_id=assigned_to_user_id,
             sla_due_at=sla_due_at,
         ))
@@ -192,14 +189,13 @@ class SupportService:
     def list_routing_rules(self):
         return self.repo.list_routing_rules()
 
-    def upsert_routing_rule(self, category: str, default_assignee_user_id: uuid.UUID | None, default_team: str | None):
+    def upsert_routing_rule(self, category: str, default_assignee_user_id: uuid.UUID | None):
         rule = self.repo.get_routing_rule(category)
         if rule:
             rule.default_assignee_user_id = default_assignee_user_id
-            rule.default_team = default_team
         else:
             rule = self.repo.add_routing_rule(SupportRoutingRule(
-                category=category, default_assignee_user_id=default_assignee_user_id, default_team=default_team,
+                category=category, default_assignee_user_id=default_assignee_user_id,
             ))
         self.session.commit()
         return rule

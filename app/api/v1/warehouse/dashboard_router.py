@@ -50,7 +50,9 @@ def export_report(
         "GSTIN": warehouse.gstin, "Address": warehouse.address, "City": warehouse.city, "State": warehouse.state,
         "Phone": warehouse.contact_phone, "Email": warehouse.contact_email,
     }
-    buffer = build_business_report_workbook("Warehouse", details, period_label, sections)
+    buffer = build_business_report_workbook(
+        "Warehouse", details, period_label, sections, show_logo=False, center_align=False,
+    )
     filename = f"warehouse_report_{start.isoformat()}_{end.isoformat()}.xlsx"
     return StreamingResponse(
         buffer,

@@ -4,7 +4,7 @@ Pure read/query logic, no business-rule side effects."""
 import uuid
 from datetime import date, datetime, time
 
-from sqlalchemy import func, select
+from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.models.catalog import Sku, SkuVariant
@@ -39,8 +39,7 @@ def build_warehouse_report_sections(session: Session, warehouse_id: uuid.UUID, s
     goods_received_rows = [
         [
             asn.ref_code, vendor.name, variant.variant_code if variant else "-", sku.name if sku else "-",
-            item.shipped_qty, receipt.received_qty, receipt.accepted_qty, receipt.rejected_qty,
-            receipt.inspection_status.value, receipt.inspected_at.strftime("%d %b %Y"),
+            receipt.received_qty, receipt.accepted_qty, receipt.rejected_qty,
         ]
         for item, asn, receipt, vendor, variant, sku in received_rows
     ]
@@ -62,15 +61,6 @@ def build_warehouse_report_sections(session: Session, warehouse_id: uuid.UUID, s
         for to, store, variant, sku in transfer_rows
     ]
 
-    supply_agg = session.execute(
-        select(Store.name, func.sum(TransferOrder.quantity), func.count())
-        .join(Store, Store.id == TransferOrder.store_id)
-        .where(TransferOrder.warehouse_id == warehouse_id, TransferOrder.created_at >= start_dt, TransferOrder.created_at <= end_dt)
-        .group_by(Store.name)
-        .order_by(Store.name)
-    ).all()
-    supply_per_store_rows = [[store_name, int(total_qty or 0), count] for store_name, total_qty, count in supply_agg]
-
     inventory_rows = session.execute(
         select(Inventory, SkuVariant, Sku)
         .join(SkuVariant, SkuVariant.id == Inventory.sku_variant_id)
@@ -79,25 +69,21 @@ def build_warehouse_report_sections(session: Session, warehouse_id: uuid.UUID, s
         .order_by(Sku.name)
     ).all()
     pending_stock_rows = [
-        [variant.variant_code, sku.name, variant.colour or "-", variant.size or "-", inv.on_hand, inv.available, inv.returns_qty]
+        [variant.variant_code, sku.name, variant.colour or "-", variant.size or "-", inv.on_hand, inv.available]
         for inv, variant, sku in inventory_rows
     ]
 
     return [
         {
             "title": "Goods Received", "rows": goods_received_rows,
-            "columns": ["ASN Ref", "Vendor", "SKU Code", "SKU Name", "Shipped Qty", "Received Qty", "Accepted Qty", "Rejected Qty", "Inspection Status", "Inspected Date"],
+            "columns": ["ASN Ref", "Vendor", "SKU Code", "Product Name", "Received Qty", "Accepted Qty", "Rejected Qty"],
         },
         {
             "title": "Goods Sent to Retail", "rows": goods_sent_rows,
-            "columns": ["Transfer Ref", "Store", "SKU Code", "SKU Name", "Quantity", "Status", "Dispatched Date", "Delivered Date"],
+            "columns": ["Dispatch Ref", "Store", "SKU Code", "Product Name", "Quantity", "Status", "Dispatched Date", "Delivered Date"],
         },
         {
-            "title": "Quantity Supplied per Store", "rows": supply_per_store_rows,
-            "columns": ["Store", "Total Quantity Supplied", "Number of Transfers"],
-        },
-        {
-            "title": "Pending Stock", "rows": pending_stock_rows,
-            "columns": ["SKU Code", "SKU Name", "Colour", "Size", "On Hand", "Available", "Returns Qty"],
+            "title": "Current Stock", "rows": pending_stock_rows,
+            "columns": ["SKU Code", "Product Name", "Colour", "Size", "Total Stock", "Available"],
         },
     ]
